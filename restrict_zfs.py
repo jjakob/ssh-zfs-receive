@@ -9,7 +9,7 @@ from typing import cast
 
 POOL = r"'[\w-]+'"
 DATASET = r"'[\w\/-]+'"
-DATASET_SNAPSHOT = r"'[\w/-]+'@'[\w:-]+'"
+DATASET_SNAPSHOT = r"'[\w/-]+'@('?)[\w:-]+('?)"
 
 # Note: Syncoid does NOT single quote the snapshot name as of version 2.1.0, but let's allow that.
 SYNCOID_SNAPSHOT = r"'[\w/-]+'@('?)syncoid_[\w:-]+\1"
