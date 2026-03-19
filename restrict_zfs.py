@@ -116,8 +116,8 @@ def main():
                 syslog.syslog(log_text)
 
         if run_command:
-            subprocess.run(command_to_run)
-
+            result = subprocess.run(command_to_run)
+            sys.exit(result.returncode)
 
 if __name__ == '__main__':
     main()
