@@ -81,7 +81,7 @@ def main():
 
     try:
         original_command = os.environ['SSH_ORIGINAL_COMMAND']
-    except:
+    except KeyError:
         log_text = 'login blocked, only commands allowed'
         if 'stderr' in log:
             print(log_text, file=sys.stderr)
