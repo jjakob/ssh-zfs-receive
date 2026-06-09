@@ -9,7 +9,7 @@ from typing import cast
 
 POOL = r"'[\w-]+'"
 DATASET = r"'[\w\/-]+'"
-DATASET_SNAPSHOT = r"'[\w/-]+'@'[\w:-]+'"
+DATASET_SNAPSHOT = r"'[\w/-]+'@('?)[\w:-]+\1"
 
 # Note: Syncoid does NOT single quote the snapshot name as of version 2.1.0, but let's allow that.
 SYNCOID_SNAPSHOT = r"'[\w/-]+'@('?)syncoid_[\w:-]+\1"
@@ -54,6 +54,7 @@ ALLOWED_COMMANDS = [
     r'zfs destroy ' + DATASET_SNAPSHOT,
     r'zfs hold ' + SYNCOID_HOLD + r'\s+' + DATASET_SNAPSHOT,
     r'zfs release ' + SYNCOID_HOLD + r'\s+' + DATASET_SNAPSHOT,
+    r'zfs create (?:-p )?[\w\/-]+',
 ]
 
 COMPILED = [re.compile(command) for command in ALLOWED_COMMANDS]
@@ -77,7 +78,16 @@ def main():
     dry_run = cast(bool, args.dry_run)
     verbose = cast(bool, args.verbose)
     log = cast(list[str], args.log)
-    original_command = os.environ['SSH_ORIGINAL_COMMAND']
+
+    try:
+        original_command = os.environ['SSH_ORIGINAL_COMMAND']
+    except KeyError:
+        log_text = 'login blocked, only commands allowed'
+        if 'stderr' in log:
+            print(log_text, file=sys.stderr)
+        if 'syslog' in log:
+            syslog.syslog(log_text)
+        sys.exit(1)
 
     # Syncoid can send multiple destroy commands separated by a semicolon when pruning.
     # Split them so that we can validate each command on its own.
@@ -106,8 +116,8 @@ def main():
                 syslog.syslog(log_text)
 
         if run_command:
-            subprocess.run(command_to_run)
-
+            result = subprocess.run(command_to_run)
+            sys.exit(result.returncode)
 
 if __name__ == '__main__':
     main()
